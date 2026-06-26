@@ -223,11 +223,18 @@ async function pagar() {
   try {
     const res = await fetch(EDGE, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plano: plano_atual, periodo: modo, email, nome })
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ndHlmZnJva2FuZ29rZXFsdWZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzE1NjIsImV4cCI6MjA5ODA0NzU2Mn0.fdHAQlS9OM0bEwjpPB0rJOSFPlhhX7gButoxPWy-Fts' },
+      body: JSON.stringify({ 
+        plano: plano_atual, 
+        periodo: modo, 
+        email, 
+        nome
+      })
     })
-    const data = await res.json()
-    if (data.error) throw new Error(data.error)
+    const texto = await res.text()
+    let data
+    try { data = JSON.parse(texto) } catch(e) { throw new Error("Resposta: " + texto.substring(0,200)) }
+    if (!data || !data.url) throw new Error("Sem URL na resposta: " + texto.substring(0,200))
     window.location.href = data.url
   } catch(e) {
     erro.textContent = 'Erro: ' + e.message
