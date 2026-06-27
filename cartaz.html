@@ -1,283 +1,241 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cartaz QR — Agendamento.pt</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cartaz QR — Agendamento.pt</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#111; font-family:'Inter',sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #111;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 16px 40px;
-      gap: 24px;
-    }
+/* CARTAZ */
+#cartaz {
+  width:360px;
+  background:#0a0a0a;
+  border-radius:20px;
+  overflow:hidden;
+  position:relative;
+}
 
-    /* ───── CARTAZ ───── */
-    .cartaz {
-      background: #fff;
-      width: 100%;
-      max-width: 400px;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
-    }
+/* Moldura dourada */
+#cartaz::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:20px;
+  padding:3px;
+  background:linear-gradient(135deg, #C9A84C, #E8C96A, #C9A84C, #8B6914, #C9A84C);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events:none;
+}
 
-    /* topo escuro */
-    .topo {
-      background: #111;
-      padding: 28px 24px 22px;
-      text-align: center;
-      position: relative;
-    }
-    .topo::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, transparent, #C9A84C, transparent);
-    }
+.cartaz_topo {
+  background:linear-gradient(135deg, #0f0a00, #1a1200);
+  padding:24px 20px 20px;
+  text-align:center;
+  border-bottom:1px solid rgba(201,168,76,.2);
+}
 
-    .logo-linha {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 6px;
-    }
-    .logo-icone {
-      width: 38px; height: 38px;
-      background: #C9A84C;
-      border-radius: 9px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
-    }
-    .logo-nome {
-      font-family: 'Playfair Display', serif;
-      font-size: 22px;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 0.3px;
-    }
-    .logo-nome span { color: #C9A84C; }
+.marca_linha {
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  color:rgba(201,168,76,.6);
+  margin-bottom:6px;
+}
 
-    .topo-sub {
-      font-size: 11px;
-      color: rgba(255,255,255,0.45);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
+.marca_logo {
+  font-family:'Playfair Display',serif;
+  font-size:26px;
+  font-weight:700;
+  color:#f0f0f0;
+  letter-spacing:.5px;
+}
 
-    /* corpo */
-    .corpo {
-      padding: 28px 24px 24px;
-      text-align: center;
-    }
+.marca_logo span { color:#C9A84C; font-style:italic; }
 
-    .nome-barbearia {
-      font-family: 'Playfair Display', serif;
-      font-size: 26px;
-      font-weight: 900;
-      color: #111;
-      line-height: 1.2;
-      margin-bottom: 4px;
-    }
-    .nome-sub {
-      font-size: 13px;
-      color: #999;
-      margin-bottom: 24px;
-    }
+.cartaz_centro {
+  padding:28px 24px;
+  text-align:center;
+  background:#0a0a0a;
+}
 
-    /* caixa QR */
-    .qr-caixa {
-      background: #fafafa;
-      border: 2px solid #ececec;
-      border-radius: 14px;
-      padding: 18px;
-      display: inline-block;
-      margin-bottom: 22px;
-    }
-    #qrcode {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #qrcode canvas,
-    #qrcode img { border-radius: 6px; display: block; }
+.barb_nome {
+  font-family:'Playfair Display',serif;
+  font-size:22px;
+  font-weight:700;
+  color:#f0f0f0;
+  margin-bottom:6px;
+  letter-spacing:-.3px;
+  line-height:1.2;
+}
 
-    /* passos */
-    .passos {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 20px;
-      text-align: left;
-    }
-    .passo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .passo-num {
-      width: 26px; height: 26px;
-      background: #C9A84C;
-      color: #fff;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-    .passo-txt {
-      font-size: 13px;
-      color: #444;
-      line-height: 1.4;
-    }
+.barb_tagline {
+  font-size:12px;
+  color:rgba(201,168,76,.7);
+  letter-spacing:2px;
+  text-transform:uppercase;
+  font-weight:600;
+  margin-bottom:24px;
+}
 
-    /* url */
-    .url-caixa {
-      background: #111;
-      border-radius: 8px;
-      padding: 9px 14px;
-      font-size: 11px;
-      color: #C9A84C;
-      font-family: monospace;
-      word-break: break-all;
-      text-align: left;
-    }
+.qr_moldura {
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  display:inline-block;
+  position:relative;
+  box-shadow:0 0 0 1px rgba(201,168,76,.3), 0 8px 32px rgba(0,0,0,.4);
+}
 
-    /* rodapé */
-    .rodape {
-      background: #f5f5f5;
-      padding: 14px 24px;
-      text-align: center;
-      border-top: 1px solid #eee;
-    }
-    .rodape p {
-      font-size: 12px;
-      color: #bbb;
-    }
-    .rodape strong { color: #C9A84C; }
+.qr_canto {
+  position:absolute;
+  width:16px;
+  height:16px;
+  border-color:#C9A84C;
+  border-style:solid;
+}
+.qr_canto.tl { top:-4px; left:-4px; border-width:3px 0 0 3px; border-radius:4px 0 0 0; }
+.qr_canto.tr { top:-4px; right:-4px; border-width:3px 3px 0 0; border-radius:0 4px 0 0; }
+.qr_canto.bl { bottom:-4px; left:-4px; border-width:0 0 3px 3px; border-radius:0 0 0 4px; }
+.qr_canto.br { bottom:-4px; right:-4px; border-width:0 3px 3px 0; border-radius:0 0 4px 0; }
 
-    /* ───── BOTÕES (não aparecem no print) ───── */
-    .botoes {
-      display: flex;
-      gap: 12px;
-    }
-    .btn {
-      padding: 12px 22px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      font-family: 'Inter', sans-serif;
-      transition: opacity 0.15s, transform 0.15s;
-    }
-    .btn:hover { opacity: 0.85; transform: translateY(-1px); }
-    .btn-ouro  { background: #C9A84C; color: #fff; }
-    .btn-bco   { background: #fff; color: #111; border: 2px solid #ddd; }
+.cartaz_rodape {
+  background:linear-gradient(135deg, #0f0a00, #1a1200);
+  padding:18px 20px;
+  text-align:center;
+  border-top:1px solid rgba(201,168,76,.2);
+}
 
-    /* print */
-    @media print {
-      body { background: #fff; padding: 0; justify-content: flex-start; }
-      .botoes { display: none; }
-      .cartaz { box-shadow: none; max-width: 100%; border-radius: 0; }
-    }
-  </style>
+.instrucao {
+  font-size:13px;
+  color:#888;
+  margin-bottom:8px;
+}
+
+.instrucao strong { color:#C9A84C; }
+
+.url_mini {
+  font-size:9px;
+  color:rgba(255,255,255,.2);
+  letter-spacing:.5px;
+  word-break:break-all;
+}
+
+/* BOTÕES */
+.btns { margin-top:20px; display:flex; gap:10px; width:360px; }
+.btn { flex:1; padding:15px; border:none; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; font-family:'Inter',sans-serif; }
+.btn_gold { background:linear-gradient(135deg,#C9A84C,#E8C96A); color:#000; }
+.btn_share { background:#1e1e1e; color:#f0f0f0; border:1px solid #333; }
+</style>
 </head>
 <body>
 
-  <div class="cartaz" id="cartaz">
-
-    <div class="topo">
-      <div class="logo-linha">
-        <div class="logo-icone">✂️</div>
-        <div class="logo-nome">Agendamento<span>.pt</span></div>
-      </div>
-      <p class="topo-sub">Marcações Online</p>
-    </div>
-
-    <div class="corpo">
-      <div class="nome-barbearia" id="nomeBarbearia">A carregar…</div>
-      <div class="nome-sub">Agende o seu corte em segundos</div>
-
-      <div class="qr-caixa">
-        <div id="qrcode"></div>
-      </div>
-
-      <div class="passos">
-        <div class="passo">
-          <div class="passo-num">1</div>
-          <div class="passo-txt">Aponte a câmara para o QR Code</div>
-        </div>
-        <div class="passo">
-          <div class="passo-num">2</div>
-          <div class="passo-txt">Escolha o serviço e o profissional</div>
-        </div>
-        <div class="passo">
-          <div class="passo-num">3</div>
-          <div class="passo-txt">Selecione o dia e hora e confirme</div>
-        </div>
-      </div>
-
-      <div class="url-caixa" id="urlCaixa">a carregar…</div>
-    </div>
-
-    <div class="rodape">
-      <p>Powered by <strong>Agendamento.pt</strong></p>
-    </div>
-
+<div id="cartaz">
+  <div class="cartaz_topo">
+    <div class="marca_linha">powered by</div>
+    <div class="marca_logo">Agenda<span>mento</span>.pt</div>
   </div>
 
-  <div class="botoes">
-    <button class="btn btn-bco" onclick="window.print()">🖨️ Imprimir</button>
-    <button class="btn btn-ouro" onclick="window.open(document.getElementById('urlCaixa').textContent,'_blank')">🔗 Abrir Link</button>
+  <div class="cartaz_centro">
+    <div class="barb_nome" id="nome_barb">A carregar...</div>
+    <div class="barb_tagline">Marca o teu corte online</div>
+    <div class="qr_moldura">
+      <div class="qr_canto tl"></div>
+      <div class="qr_canto tr"></div>
+      <div class="qr_canto bl"></div>
+      <div class="qr_canto br"></div>
+      <img id="qr_img" src="" width="200" height="200" style="display:block;border-radius:8px">
+    </div>
   </div>
 
-  <script>
-    const SUPABASE_URL  = `https://ogtyffrokangokeqlufr.supabase.co`;
-    const ANON_KEY      = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ndHlmZnJva2FuZ29rZXFsdWZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzE1NjIsImV4cCI6MjA5ODA0NzU2Mn0.fdHAQlS9OM0bEwjpPB0rJOSFPlhhX7gButoxPWy-Fts`;
+  <div class="cartaz_rodape">
+    <div class="instrucao">📱 <strong>Aponta a câmara</strong> e marca em segundos</div>
+    <div class="url_mini" id="url_mini"></div>
+  </div>
+</div>
 
-    const params        = new URLSearchParams(window.location.search);
-    const barbeariaId   = params.get(`b`) || `5869cba6-8b3a-4fe5-9cfc-e0733c97e831`;
-    const clienteUrl    = `https://anderson17quadri-cmd.github.io/pre-os-/cliente.html?b=${barbeariaId}`;
+<div class="btns">
+  <button class="btn btn_gold" onclick="guardar_imagem()">💾 Guardar imagem</button>
+  <button class="btn btn_share" onclick="partilhar()">↗️ Partilhar</button>
+</div>
 
-    // QR Code
-    document.getElementById(`urlCaixa`).textContent = clienteUrl;
-    new QRCode(document.getElementById(`qrcode`), {
-      text:         clienteUrl,
-      width:        200,
-      height:       200,
-      colorDark:    `#111111`,
-      colorLight:   `#ffffff`,
-      correctLevel: QRCode.CorrectLevel.H
-    });
+<script>
+// Receber parâmetros do URL
+const params = new URLSearchParams(window.location.search)
+const barb_id = params.get('b') || ''
+const barb_nome = decodeURIComponent(params.get('n') || 'A minha barbearia')
+const link = 'https://anderson17quadri-cmd.github.io/pre-os-/cliente.html?b=' + barb_id
 
-    // Nome da barbearia
-    async function carregarNome() {
-      try {
-        const res  = await fetch(
-          `${SUPABASE_URL}/rest/v1/barbearias?id=eq.${barbeariaId}&select=nome`,
-          { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } }
-        );
-        const data = await res.json();
-        document.getElementById(`nomeBarbearia`).textContent =
-          (data && data[0] && data[0].nome) ? data[0].nome : `Barbearia`;
-      } catch {
-        document.getElementById(`nomeBarbearia`).textContent = `Barbearia`;
+// Preencher
+document.getElementById('nome_barb').textContent = barb_nome
+document.getElementById('url_mini').textContent = link
+
+// Gerar QR code via API
+const qr_url = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(link) + '&bgcolor=ffffff&color=111111&margin=10'
+document.getElementById('qr_img').src = qr_url
+
+// Guardar como imagem PNG
+async function guardar_imagem() {
+  const btn = document.querySelector('.btn_gold')
+  btn.textContent = '⏳ A gerar...'
+  btn.disabled = true
+
+  try {
+    await new Promise(r => {
+      const img = document.getElementById('qr_img')
+      if(img.complete) r()
+      else img.onload = r
+    })
+
+    const canvas = await html2canvas(document.getElementById('cartaz'), {
+      scale: 3,
+      backgroundColor: '#0a0a0a',
+      useCORS: true,
+      allowTaint: false
+    })
+
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'agendamento-' + barb_nome.toLowerCase().replace(/\s+/g,'-') + '.png', { type: 'image/png' })
+
+      // Android/iOS — partilhar e guardar na galeria
+      if(navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Cartaz ' + barb_nome })
+      } else {
+        // Desktop — download direto
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = file.name
+        a.click()
+        URL.revokeObjectURL(url)
       }
-    }
-    carregarNome();
-  </script>
+    }, 'image/png')
 
+  } catch(e) {
+    alert('Erro ao guardar. Tira screenshot do cartaz!')
+  }
+
+  btn.textContent = '💾 Guardar imagem'
+  btn.disabled = false
+}
+
+async function partilhar() {
+  if(navigator.share) {
+    await navigator.share({
+      title: 'Agendamento.pt — ' + barb_nome,
+      text: 'Marca o teu próximo corte online!',
+      url: link
+    })
+  } else {
+    guardar_imagem()
+  }
+}
+</script>
 </body>
 </html>
