@@ -824,7 +824,7 @@ async function upload_logo() {
   const ext = file.name.split('.').pop().toLowerCase()
   const path = 'logos/' + barbearia_id + '.' + ext
   const { error } = await db.storage.from('barbearias').upload(path, file, { upsert: true })
-  if(error) { toast('Erro: ' + error.message, 'erro'); return null }
+  if(error) { alert('Erro upload: ' + JSON.stringify(error)); return null }
   return 'https://ogtyffrokangokeqlufr.supabase.co/storage/v1/object/public/barbearias/' + path
 }
 
