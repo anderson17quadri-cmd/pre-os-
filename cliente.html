@@ -726,11 +726,17 @@ async function confirmar_marcacao() {
     if(novoCli) cid = novoCli.id
   }
 
-  // Hora fim
-  const [hh,mm] = hora_selecionada.split(':').map(Number)
-  const dur = srv_selecionado?.duracao || 30
+  // Validar hora selecionada
+  if(!hora_selecionada) { toast('Escolhe uma hora primeiro', 'erro'); return }
+
+  // Hora fim - garantir que so usa HH:MM
+  const hora_limpa = hora_selecionada.substring(0,5)
+  const partes = hora_limpa.split(':')
+  const hh = parseInt(partes[0]) || 0
+  const mm = parseInt(partes[1]) || 0
+  const dur = parseInt(srv_selecionado?.duracao) || 30
   const fim_min = hh*60+mm+dur
-  const hora_fim = `${String(Math.floor(fim_min/60)).padStart(2,'0')}:${String(fim_min%60).padStart(2,'0')}`
+  const hora_fim = String(Math.floor(fim_min/60)).padStart(2,'0')+':'+String(fim_min%60).padStart(2,'0')
 
   const prof_id = prof_selecionado?.id === 'qualquer' ? null : prof_selecionado?.id
 
@@ -739,7 +745,7 @@ async function confirmar_marcacao() {
     cliente_id: cid,
     servico_id: srv_selecionado?.id,
     profissional_id: prof_id || null,
-    data, hora_inicio: hora_selecionada+':00', hora_fim: hora_fim+':00',
+    data, hora_inicio: hora_limpa+':00', hora_fim: hora_fim+':00',
     status: 'pendente'
   })
 
