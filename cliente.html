@@ -361,8 +361,15 @@ input[type="date"] { width:100%; padding:14px; background:var(--surface2); borde
 <script>
 const SUPA_URL = 'https://ogtyffrokangokeqlufr.supabase.co'
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ndHlmZnJva2FuZ29rZXFsdWZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzE1NjIsImV4cCI6MjA5ODA0NzU2Mn0.fdHAQlS9OM0bEwjpPB0rJOSFPlhhX7gButoxPWy-Fts'
-const { createClient } = supabase
-const db = createClient(SUPA_URL, SUPA_KEY)
+
+let db
+try {
+  const { createClient } = supabase
+  db = createClient(SUPA_URL, SUPA_KEY)
+} catch(e) {
+  console.error('Erro Supabase:', e)
+  document.getElementById('tela_loading').innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c">Erro ao carregar. Verifica a tua ligação e recarrega a página.</div>'
+}
 
 let user_atual = null
 let cliente_id = null
@@ -809,10 +816,16 @@ async function cancelar_marcacao(id) {
 
 // INIT
 async function init() {
-  // Esconder loading
-  document.getElementById('tela_loading').style.display='none'
+  try {
+    // Esconder loading
+    document.getElementById('tela_loading').style.display='none'
 
-  const { data: { session } } = await db.auth.getSession()
+    if(!db) {
+      document.getElementById('tela_splash').style.display='flex'
+      return
+    }
+
+    const { data: { session } } = await db.auth.getSession()
   if(session) {
     await entrar_cliente(session.user)
   } else {
@@ -829,6 +842,9 @@ async function init() {
       // Mostrar splash com botões
       document.getElementById('tela_splash').style.display='flex'
     }
+  } catch(e) {
+    console.error('Erro init:', e)
+    document.getElementById('tela_splash').style.display='flex'
   }
 }
 
