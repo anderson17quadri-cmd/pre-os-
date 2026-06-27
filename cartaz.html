@@ -185,14 +185,41 @@ function desenhar(qr) {
 
   // === RODAPÉ — Logo ou marca ===
   if(logo_img && logo_img.complete && logo_img.naturalWidth > 0) {
-    const logo_h = 50
-    const logo_w = logo_img.naturalWidth * (logo_h / logo_img.naturalHeight)
-    const logo_x = W/2 - logo_w/2
-    ctx.drawImage(logo_img, logo_x, 462, logo_w, logo_h)
+    // Círculo dourado
+    const cir_r = 40
+    const cir_x = W/2
+    const cir_y = 490
+
+    // Sombra
+    ctx.shadowColor = 'rgba(201,168,76,0.3)'
+    ctx.shadowBlur = 16
+    ctx.beginPath()
+    ctx.arc(cir_x, cir_y, cir_r, 0, Math.PI*2)
+    ctx.fillStyle = '#fff'
+    ctx.fill()
+    ctx.shadowBlur = 0
+
+    // Borda dourada
+    ctx.beginPath()
+    ctx.arc(cir_x, cir_y, cir_r, 0, Math.PI*2)
+    ctx.strokeStyle = '#C9A84C'
+    ctx.lineWidth = 2.5
+    ctx.stroke()
+
+    // Logo dentro do círculo (clip)
+    ctx.save()
+    ctx.beginPath()
+    ctx.arc(cir_x, cir_y, cir_r - 2, 0, Math.PI*2)
+    ctx.clip()
+    const logo_size = (cir_r - 2) * 2
+    ctx.drawImage(logo_img, cir_x - cir_r + 2, cir_y - cir_r + 2, logo_size, logo_size)
+    ctx.restore()
+
+    // Slogan
     ctx.font = '400 10px Inter'
-    ctx.fillStyle = 'rgba(201,168,76,0.4)'
+    ctx.fillStyle = 'rgba(201,168,76,0.5)'
     ctx.textAlign = 'center'
-    ctx.fillText('A ferramenta dos melhores barbeiros.', W/2, 530)
+    ctx.fillText('A ferramenta dos melhores barbeiros.', W/2, 545)
   } else {
     ctx.font = 'italic 700 18px Georgia, serif'
     ctx.textAlign = 'left'
