@@ -816,16 +816,24 @@ async function cancelar_marcacao(id) {
 
 // INIT
 async function init() {
-  try {
-    // Esconder loading
+  // Forçar esconder loading após 3 segundos de qualquer forma
+  const loading_timeout = setTimeout(() => {
     document.getElementById('tela_loading').style.display='none'
+    document.getElementById('tela_splash').style.display='flex'
+  }, 3000)
 
+  try {
     if(!db) {
+      clearTimeout(loading_timeout)
+      document.getElementById('tela_loading').style.display='none'
       document.getElementById('tela_splash').style.display='flex'
       return
     }
 
     const { data: { session } } = await db.auth.getSession()
+    clearTimeout(loading_timeout)
+    document.getElementById('tela_loading').style.display='none'
+
   if(session) {
     await entrar_cliente(session.user)
   } else {
