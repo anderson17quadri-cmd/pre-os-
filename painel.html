@@ -418,17 +418,23 @@ async function fazer_login() {
 }
 
 async function fazer_registro() {
-  const nome=document.getElementById('reg_nome').value
-  const email=document.getElementById('reg_email').value
-  const tel=document.getElementById('reg_tel').value
+  const nome=document.getElementById('reg_nome').value.trim()
+  const email=document.getElementById('reg_email').value.trim()
+  const tel=document.getElementById('reg_tel').value.trim()
   const pass=document.getElementById('reg_pass').value
   const erro=document.getElementById('erro_reg'); const ok=document.getElementById('ok_reg')
   erro.style.display='none'; ok.style.display='none'
   if (!nome||!email||!pass) { erro.textContent='Preenche todos os campos.'; erro.style.display='block'; return }
+  if (pass.length < 6) { erro.textContent='A password deve ter pelo menos 6 caracteres.'; erro.style.display='block'; return }
+  if (!email.includes('@')) { erro.textContent='Email inválido.'; erro.style.display='block'; return }
   const { data, error } = await db.auth.signUp({ email, password: pass })
   if (error) { erro.textContent=error.message; erro.style.display='block'; return }
   if (data.user) {
-    await db.from('barbearias').insert({ user_id:data.user.id, nome, email, telefone:tel, ativo:true })
+    // Verificar se já existe barbearia para este user
+    const { data: barb_exist } = await db.from('barbearias').select('id').eq('user_id', data.user.id).maybeSingle()
+    if (!barb_exist) {
+      await db.from('barbearias').insert({ user_id:data.user.id, nome, email, telefone:tel, ativo:true })
+    }
     ok.textContent='Conta criada! A entrar...'; ok.style.display='block'
     setTimeout(() => fazer_login(), 1000)
   }
@@ -482,9 +488,10 @@ async function carregar_dashboard() {
   const el=document.getElementById('lista_proximos')
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty_ico">📅</div><div class="empty_txt">Sem agendamentos próximos</div></div>';return}
   el.innerHTML=lista.map(a=>`<div class="card_item">
-    <div class="card_item_header"><div><div class="card_item_nome">${a.clientes?.nome||'Cliente'}</div><div class="card_item_info">${fmt_data(a.data)} às ${fmt_hora(a.hora_inicio)}</div></div>${badge(a.status)}</div>
-    <div class="card_item_info" style="margin-top:4px">${a.servicos?.nome||'—'} · ${a.profissionais?.nome||'—'}</div>
-    ${a.status==='pendente'?`<div class="card_item_actions"><button class="btn btn_success btn_sm" onclick="mudar_status('${a.id}','confirmado')">✓ Confirmar</button><button class="btn btn_danger btn_sm" onclick="mudar_status('${a.id}','cancelado')">✕ Cancelar</button></div>`:''}
+    <div class="card_item_header"><div><div class="card_item_nome">${a.clientes?.nome||'Cliente'}</div><div class="card_item_info">${fmt_data(a.data)} às ${fmt_hora(a.hora_inicio)}${a.hora_fim?' - '+fmt_hora(a.hora_fim):''}</div></div>${badge(a.status)}</div>
+    <div class="card_item_info" style="margin-top:4px">${a.servicos?.nome||'—'} · ${a.profissionais?.nome||'Qualquer'}</div>
+    <div class="card_item_info" style="margin-top:2px;color:var(--text2)">${a.clientes?.telefone||''}</div>
+    ${a.status==='pendente'?`<div class="card_item_actions"><button class="btn btn_success btn_sm" onclick="mudar_status('${a.id}','confirmado')">✓ Confirmar</button><button class="btn btn_danger btn_sm" onclick="if(confirm('Cancelar?'))mudar_status('${a.id}','cancelado')">✕ Cancelar</button></div>`:''}
   </div>`).join('')
 }
 
@@ -497,9 +504,10 @@ async function carregar_agenda(){
   const el=document.getElementById('agenda_visual')
   if(!(data||[]).length){el.innerHTML='<div class="empty"><div class="empty_ico">🗓️</div><div class="empty_txt">Sem agendamentos</div></div>';return}
   el.innerHTML=(data||[]).map(a=>`<div class="card_item">
-    <div class="card_item_header"><div><div class="card_item_nome">${fmt_hora(a.hora_inicio)} · ${a.clientes?.nome||'Cliente'}</div><div class="card_item_info">${a.servicos?.nome||'—'} · ${a.profissionais?.nome||'—'}</div></div>${badge(a.status)}</div>
-    ${a.status==='pendente'?`<div class="card_item_actions"><button class="btn btn_success btn_sm" onclick="mudar_status('${a.id}','confirmado')">✓</button><button class="btn btn_danger btn_sm" onclick="mudar_status('${a.id}','cancelado')">✕</button></div>`:''}
-    ${a.status==='confirmado'?`<div class="card_item_actions"><button class="btn btn_outline btn_sm" onclick="mudar_status('${a.id}','concluido')">Concluir</button></div>`:''}
+    <div class="card_item_header"><div><div class="card_item_nome">${fmt_hora(a.hora_inicio)}${a.hora_fim?' - '+fmt_hora(a.hora_fim):''} · ${a.clientes?.nome||'Cliente'}</div><div class="card_item_info">${a.servicos?.nome||'—'} · ${a.profissionais?.nome||'Qualquer'}</div></div>${badge(a.status)}</div>
+    <div class="card_item_info" style="margin-top:4px;color:var(--text2)">${a.clientes?.telefone||''}</div>
+    ${a.status==='pendente'?`<div class="card_item_actions"><button class="btn btn_success btn_sm" onclick="mudar_status('${a.id}','confirmado')">✓ Confirmar</button><button class="btn btn_danger btn_sm" onclick="if(confirm('Cancelar este agendamento?'))mudar_status('${a.id}','cancelado')">✕ Cancelar</button></div>`:''}
+    ${a.status==='confirmado'?`<div class="card_item_actions"><button class="btn btn_outline btn_sm" onclick="mudar_status('${a.id}','concluido')">✓ Concluir</button><button class="btn btn_danger btn_sm" onclick="if(confirm('Cancelar este agendamento?'))mudar_status('${a.id}','cancelado')">✕ Cancelar</button></div>`:''}
   </div>`).join('')
 }
 
@@ -517,11 +525,12 @@ async function carregar_agendamentos(){
   const el=document.getElementById('lista_agendamentos')
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty_ico">📋</div><div class="empty_txt">Sem agendamentos</div></div>';return}
   el.innerHTML=lista.map(a=>`<div class="card_item">
-    <div class="card_item_header"><div><div class="card_item_nome">${a.clientes?.nome||'Cliente'}</div><div class="card_item_info">${fmt_data(a.data)} às ${fmt_hora(a.hora_inicio)}</div></div>${badge(a.status)}</div>
-    <div class="card_item_info" style="margin-top:4px">${a.servicos?.nome||'—'} · ${a.profissionais?.nome||'—'}</div>
+    <div class="card_item_header"><div><div class="card_item_nome">${a.clientes?.nome||'Cliente'}</div><div class="card_item_info">${fmt_data(a.data)} às ${fmt_hora(a.hora_inicio)}${a.hora_fim?' - '+fmt_hora(a.hora_fim):''}</div></div>${badge(a.status)}</div>
+    <div class="card_item_info" style="margin-top:4px">${a.servicos?.nome||'—'} · ${a.profissionais?.nome||'Qualquer profissional'}</div>
+    <div class="card_item_info" style="margin-top:2px;color:var(--text2)">${a.clientes?.telefone||''}</div>
     <div class="card_item_actions">
-      ${a.status==='pendente'?`<button class="btn btn_success btn_sm" onclick="mudar_status('${a.id}','confirmado')">✓ Confirmar</button><button class="btn btn_danger btn_sm" onclick="mudar_status('${a.id}','cancelado')">✕</button>`:''}
-      ${a.status==='confirmado'?`<button class="btn btn_outline btn_sm" onclick="mudar_status('${a.id}','concluido')">Concluir</button><button class="btn btn_danger btn_sm" onclick="mudar_status('${a.id}','cancelado')">✕</button>`:''}
+      ${a.status==='pendente'?`<button class="btn btn_success btn_sm" onclick="mudar_status('${a.id}','confirmado')">✓ Confirmar</button><button class="btn btn_danger btn_sm" onclick="if(confirm('Cancelar?'))mudar_status('${a.id}','cancelado')">✕</button>`:''}
+      ${a.status==='confirmado'?`<button class="btn btn_outline btn_sm" onclick="mudar_status('${a.id}','concluido')">✓ Concluir</button><button class="btn btn_danger btn_sm" onclick="if(confirm('Cancelar?'))mudar_status('${a.id}','cancelado')">✕</button>`:''}
     </div>
   </div>`).join('')
 }
@@ -683,10 +692,12 @@ document.querySelectorAll('.modal_overlay').forEach(m=>m.addEventListener('click
 
 // INIT
 async function entrar_app(user){
-  const{data:bar}=await db.from('barbearias').select('*').eq('user_id',user.id).single()
+  const{data:bar}=await db.from('barbearias').select('*').eq('user_id',user.id).maybeSingle()
   if(!bar){
+    // Só cria se realmente não existe — evita duplicados
     const{data:novaBar}=await db.from('barbearias').insert({user_id:user.id,nome:user.email.split('@')[0],email:user.email,ativo:true}).select().single()
     if(novaBar){barbearia_id=novaBar.id;document.getElementById('sidebar_nome').textContent=novaBar.nome}
+    else { await sair(); return }
   } else {
     barbearia_id=bar.id
     document.getElementById('sidebar_nome').textContent=bar.nome
