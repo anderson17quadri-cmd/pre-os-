@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Agendamento.pt</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -77,7 +78,7 @@ body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; 
 .page { display:none; padding:16px; }
 .page.active { display:block; }
 .page_header { margin-bottom:20px; }
-.page_titulo { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; }
+.page_titulo { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; letter-spacing:-.3px; }
 .page_sub { color:var(--text2); font-size:13px; margin-top:2px; }
 
 /* STAT CARDS */
@@ -98,8 +99,8 @@ body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; 
 
 /* BADGES */
 .badge { display:inline-flex; align-items:center; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; }
-.badge_pendente { background:rgba(230,126,34,.15); color:#e67e22; }
-.badge_confirmado { background:rgba(45,158,107,.15); color:#2d9e6b; }
+.badge_pendente { background:rgba(230,126,34,.12); color:#e89043; border:1px solid rgba(230,126,34,.2); }
+.badge_confirmado { background:rgba(46,204,113,.12); color:#2ecc71; border:1px solid rgba(46,204,113,.2); }
 .badge_cancelado { background:rgba(192,57,43,.15); color:#c0392b; }
 .badge_concluido { background:rgba(100,100,200,.15); color:#aab; }
 
@@ -121,7 +122,7 @@ body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; 
 .modal_overlay.open { display:flex; }
 .modal { background:var(--surface); border-radius:24px 24px 0 0; padding:28px; width:100%; max-height:90vh; overflow-y:auto; border-top:1px solid var(--border); }
 .modal_handle { width:40px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 20px; }
-.modal_titulo { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; margin-bottom:20px; }
+.modal_titulo { font-family:'Playfair Display',serif; font-size:22px; font-weight:700; margin-bottom:20px; letter-spacing:-.3px; }
 
 /* SECÇÃO */
 .section_card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:12px; }
@@ -319,6 +320,17 @@ input[type="time"], input[type="date"] { width:100%; padding:12px 14px; backgrou
       <div onclick="ir_para('mais')" style="cursor:pointer;font-size:20px">←</div>
       <div><div class="page_titulo">Perfil</div></div>
     </div>
+    <!-- LINK DA BARBEARIA -->
+    <div class="section_card" style="background:rgba(201,168,76,.05);border-color:rgba(201,168,76,.3)">
+      <div class="section_label" style="color:var(--accent)">🔗 O teu link de agendamento</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Partilha este link na bio do Instagram ou WhatsApp para os clientes marcarem diretamente!</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:12px;color:var(--text2);word-break:break-all;margin-bottom:12px" id="meu_link">A carregar...</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn_gold" style="flex:1" onclick="copiar_link()">📋 Copiar link</button>
+        <button class="btn btn_outline" style="flex:1" onclick="ver_qr()">📷 QR Code</button>
+      </div>
+    </div>
+
     <div class="section_card">
       <div class="section_label">Dados da barbearia</div>
       <div class="field"><label>Nome</label><input type="text" id="perfil_nome"></div>
@@ -327,6 +339,18 @@ input[type="time"], input[type="date"] { width:100%; padding:12px 14px; backgrou
       <div class="field"><label>Morada</label><input type="text" id="perfil_morada"></div>
       <div class="field"><label>Cidade</label><input type="text" id="perfil_cidade"></div>
       <button class="btn btn_gold btn_full" onclick="guardar_perfil()">Guardar</button>
+    </div>
+  </div>
+
+  <!-- MODAL QR CODE -->
+  <div class="modal_overlay" id="modal_qr">
+    <div class="modal" style="text-align:center">
+      <div class="modal_handle"></div>
+      <div class="modal_titulo">QR Code da tua barbearia</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Os clientes apontam a câmara e marcam diretamente!</div>
+      <div id="qr_container" style="display:flex;justify-content:center;margin-bottom:20px"></div>
+      <button class="btn btn_gold btn_full" onclick="copiar_link();fechar_modal('modal_qr')">📋 Copiar link</button>
+      <button class="btn btn_outline btn_full" style="margin-top:8px" onclick="fechar_modal('modal_qr')">Fechar</button>
     </div>
   </div>
 
@@ -679,6 +703,29 @@ async function carregar_perfil(){
   document.getElementById('perfil_morada').value=data.morada||''
   document.getElementById('perfil_cidade').value=data.cidade||''
 }
+function copiar_link() {
+  const link = 'https://anderson17quadri-cmd.github.io/pre-os-/cliente.html?b=' + barbearia_id
+  if(navigator.clipboard) {
+    navigator.clipboard.writeText(link).then(() => toast('Link copiado! 🔗'))
+  } else {
+    const el = document.createElement('textarea')
+    el.value = link; document.body.appendChild(el)
+    el.select(); document.execCommand('copy')
+    document.body.removeChild(el)
+    toast('Link copiado! 🔗')
+  }
+}
+
+function ver_qr() {
+  abrir_modal('modal_qr')
+  const link = 'https://anderson17quadri-cmd.github.io/pre-os-/cliente.html?b=' + barbearia_id
+  const container = document.getElementById('qr_container')
+  container.innerHTML = ''
+  const canvas = document.createElement('canvas')
+  container.appendChild(canvas)
+  QRCode.toCanvas(canvas, link, { width: 220, margin: 2, color: { dark: '#C9A84C', light: '#101010' } })
+}
+
 async function guardar_perfil(){
   const dados={nome:document.getElementById('perfil_nome').value,descricao:document.getElementById('perfil_desc').value,telefone:document.getElementById('perfil_tel').value,morada:document.getElementById('perfil_morada').value,cidade:document.getElementById('perfil_cidade').value}
   await db.from('barbearias').update(dados).eq('id',barbearia_id)
@@ -701,6 +748,11 @@ async function entrar_app(user){
   } else {
     barbearia_id=bar.id
     document.getElementById('sidebar_nome').textContent=bar.nome
+
+  // Atualizar link da barbearia
+  const link = 'https://anderson17quadri-cmd.github.io/pre-os-/cliente.html?b=' + barbearia_id
+  const el = document.getElementById('meu_link')
+  if(el) el.textContent = link
   }
   document.getElementById('tela_auth').style.display='none'
   document.getElementById('tela_app').style.display='block'
