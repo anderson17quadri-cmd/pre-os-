@@ -27,7 +27,7 @@ body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; 
 
 /* SPLASH */
 #tela_splash {
-  min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:100vh; display:none; flex-direction:column; align-items:center; justify-content:center;
   background:radial-gradient(ellipse at 50% 0%, rgba(201,168,76,.12) 0%, #080808 65%); padding:32px;
 }
 .splash_logo { font-family:'Playfair Display',serif; font-size:42px; font-weight:700; text-align:center; margin-bottom:8px; letter-spacing:.5px; }
@@ -165,6 +165,12 @@ input[type="date"] { width:100%; padding:14px; background:var(--surface2); borde
 </style>
 </head>
 <body>
+<div id="tela_loading" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#080808">
+  <div style="text-align:center">
+    <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;margin-bottom:16px">Agenda<span style="color:#C9A84C;font-style:italic">mento</span>.pt</div>
+    <div style="width:24px;height:24px;border:2px solid #333;border-top-color:#C9A84C;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div>
+  </div>
+</div>
 
 <!-- SPLASH -->
 <div id="tela_splash">
@@ -803,10 +809,8 @@ async function cancelar_marcacao(id) {
 
 // INIT
 async function init() {
-  // Garantir que splash aparece enquanto carrega
-  document.getElementById('tela_splash').style.display='none'
-  document.getElementById('tela_app').style.display='none'
-  document.getElementById('tela_auth').style.display='none'
+  // Esconder loading
+  document.getElementById('tela_loading').style.display='none'
 
   const { data: { session } } = await db.auth.getSession()
   if(session) {
