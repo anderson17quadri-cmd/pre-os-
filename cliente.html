@@ -296,7 +296,7 @@ input[type="date"] { width:100%; padding:14px; background:var(--surface2); borde
       <!-- STEP 3: DATA E HORA -->
       <div id="flow_step3" style="display:none">
         <div class="section_label">Escolhe a data</div>
-        <div class="field"><input type="date" id="data_agendar" onchange="carregar_horas()"></div>
+        <div class="field"><input type="date" id="data_agendar" onchange="carregar_horas()" min="" ></div>
         <div class="section_label" style="margin-top:16px">Horários disponíveis</div>
         <div class="horas_grid" id="lista_horas"></div>
         <button class="btn_primary btn_full" onclick="ir_step(4)" id="btn_step3" disabled style="opacity:.4">Continuar</button>
@@ -570,6 +570,12 @@ async function abrir_barbearia(id) {
 function fechar_barbearia() {
   document.getElementById('tela_barbearia').style.display='none'
   document.getElementById('tela_app').style.display='block'
+  // Reset do flow
+  barb_selecionada = null
+  srv_selecionado = null
+  prof_selecionado = null
+  hora_selecionada = null
+  step_atual = 1
   window.scrollTo(0,0)
 }
 
