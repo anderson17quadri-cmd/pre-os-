@@ -193,11 +193,18 @@ async function guardar_imagem() {
       else img.onload = r
     })
 
-    const canvas = await html2canvas(document.getElementById('cartaz'), {
+    const el = document.getElementById('cartaz')
+    const canvas = await html2canvas(el, {
       scale: 3,
       backgroundColor: '#0a0a0a',
       useCORS: true,
-      allowTaint: false
+      allowTaint: false,
+      width: el.offsetWidth,
+      height: el.offsetHeight,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: el.offsetWidth,
+      windowHeight: el.offsetHeight
     })
 
     canvas.toBlob(async (blob) => {
