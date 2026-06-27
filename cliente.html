@@ -803,26 +803,27 @@ async function cancelar_marcacao(id) {
 
 // INIT
 async function init() {
+  // Garantir que splash aparece enquanto carrega
+  document.getElementById('tela_splash').style.display='none'
+  document.getElementById('tela_app').style.display='none'
+  document.getElementById('tela_auth').style.display='none'
+
   const { data: { session } } = await db.auth.getSession()
   if(session) {
     await entrar_cliente(session.user)
   } else {
-    // Verificar se tem nome guardado (usou sem login antes)
     const nome = localStorage.getItem('cliente_nome')
-    if(nome) {
-      document.getElementById('tela_splash').style.display='none'
+    const params = new URLSearchParams(window.location.search)
+    const barbId = params.get('b')
+
+    if(nome || barbId) {
       document.getElementById('tela_app').style.display='block'
       atualizar_perfil_ui()
       carregar_barbearias()
-    }
-    // Verificar se URL tem ID de barbearia
-    const params = new URLSearchParams(window.location.search)
-    const barbId = params.get('b')
-    if(barbId) {
-      document.getElementById('tela_splash').style.display='none'
-      document.getElementById('tela_app').style.display='block'
-      carregar_barbearias()
-      setTimeout(() => abrir_barbearia(barbId), 500)
+      if(barbId) setTimeout(() => abrir_barbearia(barbId), 500)
+    } else {
+      // Mostrar splash com botões
+      document.getElementById('tela_splash').style.display='flex'
     }
   }
 }
