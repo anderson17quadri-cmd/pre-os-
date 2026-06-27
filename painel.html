@@ -6,7 +6,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Agendamento.pt</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -78,7 +77,7 @@ body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; 
 .page { display:none; padding:16px; }
 .page.active { display:block; }
 .page_header { margin-bottom:20px; }
-.page_titulo { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; letter-spacing:-.3px; }
+.page_titulo { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; }
 .page_sub { color:var(--text2); font-size:13px; margin-top:2px; }
 
 /* STAT CARDS */
@@ -99,8 +98,8 @@ body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; 
 
 /* BADGES */
 .badge { display:inline-flex; align-items:center; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; }
-.badge_pendente { background:rgba(230,126,34,.12); color:#e89043; border:1px solid rgba(230,126,34,.2); }
-.badge_confirmado { background:rgba(46,204,113,.12); color:#2ecc71; border:1px solid rgba(46,204,113,.2); }
+.badge_pendente { background:rgba(230,126,34,.15); color:#e67e22; }
+.badge_confirmado { background:rgba(45,158,107,.15); color:#2d9e6b; }
 .badge_cancelado { background:rgba(192,57,43,.15); color:#c0392b; }
 .badge_concluido { background:rgba(100,100,200,.15); color:#aab; }
 
@@ -122,7 +121,7 @@ body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; 
 .modal_overlay.open { display:flex; }
 .modal { background:var(--surface); border-radius:24px 24px 0 0; padding:28px; width:100%; max-height:90vh; overflow-y:auto; border-top:1px solid var(--border); }
 .modal_handle { width:40px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 20px; }
-.modal_titulo { font-family:'Playfair Display',serif; font-size:22px; font-weight:700; margin-bottom:20px; letter-spacing:-.3px; }
+.modal_titulo { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; margin-bottom:20px; }
 
 /* SECÇÃO */
 .section_card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:12px; }
@@ -320,17 +319,6 @@ input[type="time"], input[type="date"] { width:100%; padding:12px 14px; backgrou
       <div onclick="ir_para('mais')" style="cursor:pointer;font-size:20px">←</div>
       <div><div class="page_titulo">Perfil</div></div>
     </div>
-    <!-- LINK DA BARBEARIA -->
-    <div class="section_card" style="background:rgba(201,168,76,.05);border-color:rgba(201,168,76,.3)">
-      <div class="section_label" style="color:var(--accent)">🔗 O teu link de agendamento</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Partilha este link na bio do Instagram ou WhatsApp para os clientes marcarem diretamente!</div>
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:12px;color:var(--text2);word-break:break-all;margin-bottom:12px" id="meu_link">A carregar...</div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn_gold" style="flex:1" onclick="copiar_link()">📋 Copiar link</button>
-        <button class="btn btn_outline" style="flex:1" onclick="ver_qr()">📷 QR Code</button>
-      </div>
-    </div>
-
     <div class="section_card">
       <div class="section_label">Dados da barbearia</div>
       <div class="field"><label>Nome</label><input type="text" id="perfil_nome"></div>
@@ -339,18 +327,6 @@ input[type="time"], input[type="date"] { width:100%; padding:12px 14px; backgrou
       <div class="field"><label>Morada</label><input type="text" id="perfil_morada"></div>
       <div class="field"><label>Cidade</label><input type="text" id="perfil_cidade"></div>
       <button class="btn btn_gold btn_full" onclick="guardar_perfil()">Guardar</button>
-    </div>
-  </div>
-
-  <!-- MODAL QR CODE -->
-  <div class="modal_overlay" id="modal_qr">
-    <div class="modal" style="text-align:center">
-      <div class="modal_handle"></div>
-      <div class="modal_titulo">QR Code da tua barbearia</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Os clientes apontam a câmara e marcam diretamente!</div>
-      <div id="qr_container" style="display:flex;justify-content:center;margin-bottom:20px"></div>
-      <button class="btn btn_gold btn_full" onclick="copiar_link();fechar_modal('modal_qr')">📋 Copiar link</button>
-      <button class="btn btn_outline btn_full" style="margin-top:8px" onclick="fechar_modal('modal_qr')">Fechar</button>
     </div>
   </div>
 
@@ -442,23 +418,17 @@ async function fazer_login() {
 }
 
 async function fazer_registro() {
-  const nome=document.getElementById('reg_nome').value.trim()
-  const email=document.getElementById('reg_email').value.trim()
-  const tel=document.getElementById('reg_tel').value.trim()
+  const nome=document.getElementById('reg_nome').value
+  const email=document.getElementById('reg_email').value
+  const tel=document.getElementById('reg_tel').value
   const pass=document.getElementById('reg_pass').value
   const erro=document.getElementById('erro_reg'); const ok=document.getElementById('ok_reg')
   erro.style.display='none'; ok.style.display='none'
   if (!nome||!email||!pass) { erro.textContent='Preenche todos os campos.'; erro.style.display='block'; return }
-  if (pass.length < 6) { erro.textContent='A password deve ter pelo menos 6 caracteres.'; erro.style.display='block'; return }
-  if (!email.includes('@')) { erro.textContent='Email inválido.'; erro.style.display='block'; return }
   const { data, error } = await db.auth.signUp({ email, password: pass })
   if (error) { erro.textContent=error.message; erro.style.display='block'; return }
   if (data.user) {
-    // Verificar se já existe barbearia para este user
-    const { data: barb_exist } = await db.from('barbearias').select('id').eq('user_id', data.user.id).maybeSingle()
-    if (!barb_exist) {
-      await db.from('barbearias').insert({ user_id:data.user.id, nome, email, telefone:tel, ativo:true })
-    }
+    await db.from('barbearias').insert({ user_id:data.user.id, nome, email, telefone:tel, ativo:true })
     ok.textContent='Conta criada! A entrar...'; ok.style.display='block'
     setTimeout(() => fazer_login(), 1000)
   }
@@ -502,7 +472,7 @@ async function carregar_dashboard() {
     db.from('agendamentos').select('id',{count:'exact'}).eq('barbearia_id',barbearia_id).gte('data',hoje).lte('data',semana),
     db.from('clientes').select('id',{count:'exact'}).eq('barbearia_id',barbearia_id),
     db.from('agendamentos').select('id',{count:'exact'}).eq('barbearia_id',barbearia_id).eq('status','pendente'),
-    db.from('agendamentos').select('*,servicos(nome),profissionais(nome),clientes(nome,telefone)').eq('barbearia_id',barbearia_id).gte('data',hoje).order('data').order('hora_inicio').limit(5)
+    db.from('agendamentos').select('*,servicos(nome),profissionais(nome),clientes(nome)').eq('barbearia_id',barbearia_id).gte('data',hoje).order('data').order('hora_inicio').limit(5)
   ])
   document.getElementById('stat_hoje').textContent=r1.count||0
   document.getElementById('stat_semana').textContent=r2.count||0
@@ -512,10 +482,9 @@ async function carregar_dashboard() {
   const el=document.getElementById('lista_proximos')
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty_ico">📅</div><div class="empty_txt">Sem agendamentos próximos</div></div>';return}
   el.innerHTML=lista.map(a=>`<div class="card_item">
-    <div class="card_item_header"><div><div class="card_item_nome">${a.clientes?.nome||'Cliente'}</div><div class="card_item_info">${fmt_data(a.data)} às ${fmt_hora(a.hora_inicio)}${a.hora_fim?' - '+fmt_hora(a.hora_fim):''}</div></div>${badge(a.status)}</div>
-    <div class="card_item_info" style="margin-top:4px">${a.servicos?.nome||'—'} · ${a.profissionais?.nome||'Qualquer'}</div>
-    <div class="card_item_info" style="margin-top:2px;color:var(--text2)">${a.clientes?.telefone||''}</div>
-    ${a.status==='pendente'?`<div class="card_item_actions"><button class="btn btn_success btn_sm" onclick="mudar_status('${a.id}','confirmado')">✓ Confirmar</button><button class="btn btn_danger btn_sm" onclick="if(confirm('Cancelar?'))mudar_status('${a.id}','cancelado')">✕ Cancelar</button></div>`:''}
+    <div class="card_item_header"><div><div class="card_item_nome">${a.clientes?.nome||'Cliente'}</div><div class="card_item_info">${fmt_data(a.data)} às ${fmt_hora(a.hora_inicio)}</div></div>${badge(a.status)}</div>
+    <div class="card_item_info" style="margin-top:4px">${a.servicos?.nome||'—'} · ${a.profissionais?.nome||'—'}</div>
+    ${a.status==='pendente'?`<div class="card_item_actions"><button class="btn btn_success btn_sm" onclick="mudar_status('${a.id}','confirmado')">✓ Confirmar</button><button class="btn btn_danger btn_sm" onclick="mudar_status('${a.id}','cancelado')">✕ Cancelar</button></div>`:''}
   </div>`).join('')
 }
 
@@ -524,14 +493,13 @@ function mudar_dia(n){data_agenda.setDate(data_agenda.getDate()+n);carregar_agen
 async function carregar_agenda(){
   const d=data_agenda.toISOString().split('T')[0]
   document.getElementById('agenda_data_label').textContent=fmt_data(d)
-  const{data}=await db.from('agendamentos').select('*,servicos(nome),profissionais(nome),clientes(nome,telefone)').eq('barbearia_id',barbearia_id).eq('data',d).order('hora_inicio')
+  const{data}=await db.from('agendamentos').select('*,servicos(nome),profissionais(nome),clientes(nome)').eq('barbearia_id',barbearia_id).eq('data',d).order('hora_inicio')
   const el=document.getElementById('agenda_visual')
   if(!(data||[]).length){el.innerHTML='<div class="empty"><div class="empty_ico">🗓️</div><div class="empty_txt">Sem agendamentos</div></div>';return}
   el.innerHTML=(data||[]).map(a=>`<div class="card_item">
-    <div class="card_item_header"><div><div class="card_item_nome">${fmt_hora(a.hora_inicio)}${a.hora_fim?' - '+fmt_hora(a.hora_fim):''} · ${a.clientes?.nome||'Cliente'}</div><div class="card_item_info">${a.servicos?.nome||'—'} · ${a.profissionais?.nome||'Qualquer'}</div></div>${badge(a.status)}</div>
-    <div class="card_item_info" style="margin-top:4px;color:var(--text2)">${a.clientes?.telefone||''}</div>
-    ${a.status==='pendente'?`<div class="card_item_actions"><button class="btn btn_success btn_sm" onclick="mudar_status('${a.id}','confirmado')">✓ Confirmar</button><button class="btn btn_danger btn_sm" onclick="if(confirm('Cancelar este agendamento?'))mudar_status('${a.id}','cancelado')">✕ Cancelar</button></div>`:''}
-    ${a.status==='confirmado'?`<div class="card_item_actions"><button class="btn btn_outline btn_sm" onclick="mudar_status('${a.id}','concluido')">✓ Concluir</button><button class="btn btn_danger btn_sm" onclick="if(confirm('Cancelar este agendamento?'))mudar_status('${a.id}','cancelado')">✕ Cancelar</button></div>`:''}
+    <div class="card_item_header"><div><div class="card_item_nome">${fmt_hora(a.hora_inicio)} · ${a.clientes?.nome||'Cliente'}</div><div class="card_item_info">${a.servicos?.nome||'—'} · ${a.profissionais?.nome||'—'}</div></div>${badge(a.status)}</div>
+    ${a.status==='pendente'?`<div class="card_item_actions"><button class="btn btn_success btn_sm" onclick="mudar_status('${a.id}','confirmado')">✓</button><button class="btn btn_danger btn_sm" onclick="mudar_status('${a.id}','cancelado')">✕</button></div>`:''}
+    ${a.status==='confirmado'?`<div class="card_item_actions"><button class="btn btn_outline btn_sm" onclick="mudar_status('${a.id}','concluido')">Concluir</button></div>`:''}
   </div>`).join('')
 }
 
@@ -542,19 +510,18 @@ function filtrar_status(el,s){
   el.classList.add('active'); _filtro=s; carregar_agendamentos()
 }
 async function carregar_agendamentos(){
-  let q=db.from('agendamentos').select('*,servicos(nome),profissionais(nome),clientes(nome,telefone)').eq('barbearia_id',barbearia_id).order('data',{ascending:false}).order('hora_inicio',{ascending:false})
+  let q=db.from('agendamentos').select('*,servicos(nome),profissionais(nome),clientes(nome)').eq('barbearia_id',barbearia_id).order('data',{ascending:false}).order('hora_inicio',{ascending:false})
   if(_filtro) q=q.eq('status',_filtro)
   const{data}=await q.limit(30)
   const lista=data||[]
   const el=document.getElementById('lista_agendamentos')
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty_ico">📋</div><div class="empty_txt">Sem agendamentos</div></div>';return}
   el.innerHTML=lista.map(a=>`<div class="card_item">
-    <div class="card_item_header"><div><div class="card_item_nome">${a.clientes?.nome||'Cliente'}</div><div class="card_item_info">${fmt_data(a.data)} às ${fmt_hora(a.hora_inicio)}${a.hora_fim?' - '+fmt_hora(a.hora_fim):''}</div></div>${badge(a.status)}</div>
-    <div class="card_item_info" style="margin-top:4px">${a.servicos?.nome||'—'} · ${a.profissionais?.nome||'Qualquer profissional'}</div>
-    <div class="card_item_info" style="margin-top:2px;color:var(--text2)">${a.clientes?.telefone||''}</div>
+    <div class="card_item_header"><div><div class="card_item_nome">${a.clientes?.nome||'Cliente'}</div><div class="card_item_info">${fmt_data(a.data)} às ${fmt_hora(a.hora_inicio)}</div></div>${badge(a.status)}</div>
+    <div class="card_item_info" style="margin-top:4px">${a.servicos?.nome||'—'} · ${a.profissionais?.nome||'—'}</div>
     <div class="card_item_actions">
-      ${a.status==='pendente'?`<button class="btn btn_success btn_sm" onclick="mudar_status('${a.id}','confirmado')">✓ Confirmar</button><button class="btn btn_danger btn_sm" onclick="if(confirm('Cancelar?'))mudar_status('${a.id}','cancelado')">✕</button>`:''}
-      ${a.status==='confirmado'?`<button class="btn btn_outline btn_sm" onclick="mudar_status('${a.id}','concluido')">✓ Concluir</button><button class="btn btn_danger btn_sm" onclick="if(confirm('Cancelar?'))mudar_status('${a.id}','cancelado')">✕</button>`:''}
+      ${a.status==='pendente'?`<button class="btn btn_success btn_sm" onclick="mudar_status('${a.id}','confirmado')">✓ Confirmar</button><button class="btn btn_danger btn_sm" onclick="mudar_status('${a.id}','cancelado')">✕</button>`:''}
+      ${a.status==='confirmado'?`<button class="btn btn_outline btn_sm" onclick="mudar_status('${a.id}','concluido')">Concluir</button><button class="btn btn_danger btn_sm" onclick="mudar_status('${a.id}','cancelado')">✕</button>`:''}
     </div>
   </div>`).join('')
 }
@@ -566,7 +533,7 @@ async function mudar_status(id,status){
 
 // SERVIÇOS
 async function carregar_servicos(){
-  const{data}=await db.from('servicos').select('*').eq('barbearia_id',barbearia_id).eq('ativo',true).order('nome')
+  const{data}=await db.from('servicos').select('*').eq('barbearia_id',barbearia_id).order('nome')
   const lista=data||[]
   const el=document.getElementById('lista_servicos')
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty_ico">✂️</div><div class="empty_txt">Ainda não tens serviços</div><div class="empty_txt" style="font-size:12px">Clica no + para adicionar</div></div>';return}
@@ -609,7 +576,7 @@ async function apagar_servico(id){
 
 // PROFISSIONAIS
 async function carregar_profissionais(){
-  const{data}=await db.from('profissionais').select('*').eq('barbearia_id',barbearia_id).eq('ativo',true).order('nome')
+  const{data}=await db.from('profissionais').select('*').eq('barbearia_id',barbearia_id).order('nome')
   const lista=data||[]
   const el=document.getElementById('lista_profissionais')
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty_ico">👥</div><div class="empty_txt">Ainda não tens profissionais</div><div class="empty_txt" style="font-size:12px">Clica no + para adicionar</div></div>';return}
@@ -703,34 +670,6 @@ async function carregar_perfil(){
   document.getElementById('perfil_morada').value=data.morada||''
   document.getElementById('perfil_cidade').value=data.cidade||''
 }
-function copiar_link() {
-  const link = 'https://anderson17quadri-cmd.github.io/pre-os-/cliente.html?b=' + barbearia_id
-  if(navigator.clipboard) {
-    navigator.clipboard.writeText(link).then(() => toast('Link copiado! 🔗'))
-  } else {
-    const el = document.createElement('textarea')
-    el.value = link; document.body.appendChild(el)
-    el.select(); document.execCommand('copy')
-    document.body.removeChild(el)
-    toast('Link copiado! 🔗')
-  }
-}
-
-function ver_qr() {
-  abrir_modal('modal_qr')
-  const link = 'https://anderson17quadri-cmd.github.io/pre-os-/cliente.html?b=' + barbearia_id
-  const container = document.getElementById('qr_container')
-  container.innerHTML = ''
-  new QRCode(container, {
-    text: link,
-    width: 220,
-    height: 220,
-    colorDark: '#C9A84C',
-    colorLight: '#101010',
-    correctLevel: QRCode.CorrectLevel.H
-  })
-}
-
 async function guardar_perfil(){
   const dados={nome:document.getElementById('perfil_nome').value,descricao:document.getElementById('perfil_desc').value,telefone:document.getElementById('perfil_tel').value,morada:document.getElementById('perfil_morada').value,cidade:document.getElementById('perfil_cidade').value}
   await db.from('barbearias').update(dados).eq('id',barbearia_id)
@@ -744,20 +683,13 @@ document.querySelectorAll('.modal_overlay').forEach(m=>m.addEventListener('click
 
 // INIT
 async function entrar_app(user){
-  const{data:bar}=await db.from('barbearias').select('*').eq('user_id',user.id).maybeSingle()
+  const{data:bar}=await db.from('barbearias').select('*').eq('user_id',user.id).single()
   if(!bar){
-    // Só cria se realmente não existe — evita duplicados
     const{data:novaBar}=await db.from('barbearias').insert({user_id:user.id,nome:user.email.split('@')[0],email:user.email,ativo:true}).select().single()
     if(novaBar){barbearia_id=novaBar.id;document.getElementById('sidebar_nome').textContent=novaBar.nome}
-    else { await sair(); return }
   } else {
     barbearia_id=bar.id
     document.getElementById('sidebar_nome').textContent=bar.nome
-
-  // Atualizar link da barbearia
-  const link = 'https://anderson17quadri-cmd.github.io/pre-os-/cliente.html?b=' + barbearia_id
-  const el = document.getElementById('meu_link')
-  if(el) el.textContent = link
   }
   document.getElementById('tela_auth').style.display='none'
   document.getElementById('tela_app').style.display='block'
