@@ -478,7 +478,7 @@ async function carregar_dashboard() {
     db.from('agendamentos').select('id',{count:'exact'}).eq('barbearia_id',barbearia_id).gte('data',hoje).lte('data',semana),
     db.from('clientes').select('id',{count:'exact'}).eq('barbearia_id',barbearia_id),
     db.from('agendamentos').select('id',{count:'exact'}).eq('barbearia_id',barbearia_id).eq('status','pendente'),
-    db.from('agendamentos').select('*,servicos(nome),profissionais(nome),clientes(nome)').eq('barbearia_id',barbearia_id).gte('data',hoje).order('data').order('hora_inicio').limit(5)
+    db.from('agendamentos').select('*,servicos(nome),profissionais(nome),clientes(nome,telefone)').eq('barbearia_id',barbearia_id).gte('data',hoje).order('data').order('hora_inicio').limit(5)
   ])
   document.getElementById('stat_hoje').textContent=r1.count||0
   document.getElementById('stat_semana').textContent=r2.count||0
@@ -500,7 +500,7 @@ function mudar_dia(n){data_agenda.setDate(data_agenda.getDate()+n);carregar_agen
 async function carregar_agenda(){
   const d=data_agenda.toISOString().split('T')[0]
   document.getElementById('agenda_data_label').textContent=fmt_data(d)
-  const{data}=await db.from('agendamentos').select('*,servicos(nome),profissionais(nome),clientes(nome)').eq('barbearia_id',barbearia_id).eq('data',d).order('hora_inicio')
+  const{data}=await db.from('agendamentos').select('*,servicos(nome),profissionais(nome),clientes(nome,telefone)').eq('barbearia_id',barbearia_id).eq('data',d).order('hora_inicio')
   const el=document.getElementById('agenda_visual')
   if(!(data||[]).length){el.innerHTML='<div class="empty"><div class="empty_ico">🗓️</div><div class="empty_txt">Sem agendamentos</div></div>';return}
   el.innerHTML=(data||[]).map(a=>`<div class="card_item">
@@ -518,7 +518,7 @@ function filtrar_status(el,s){
   el.classList.add('active'); _filtro=s; carregar_agendamentos()
 }
 async function carregar_agendamentos(){
-  let q=db.from('agendamentos').select('*,servicos(nome),profissionais(nome),clientes(nome)').eq('barbearia_id',barbearia_id).order('data',{ascending:false}).order('hora_inicio',{ascending:false})
+  let q=db.from('agendamentos').select('*,servicos(nome),profissionais(nome),clientes(nome,telefone)').eq('barbearia_id',barbearia_id).order('data',{ascending:false}).order('hora_inicio',{ascending:false})
   if(_filtro) q=q.eq('status',_filtro)
   const{data}=await q.limit(30)
   const lista=data||[]
@@ -542,7 +542,7 @@ async function mudar_status(id,status){
 
 // SERVIÇOS
 async function carregar_servicos(){
-  const{data}=await db.from('servicos').select('*').eq('barbearia_id',barbearia_id).order('nome')
+  const{data}=await db.from('servicos').select('*').eq('barbearia_id',barbearia_id).eq('ativo',true).order('nome')
   const lista=data||[]
   const el=document.getElementById('lista_servicos')
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty_ico">✂️</div><div class="empty_txt">Ainda não tens serviços</div><div class="empty_txt" style="font-size:12px">Clica no + para adicionar</div></div>';return}
@@ -585,7 +585,7 @@ async function apagar_servico(id){
 
 // PROFISSIONAIS
 async function carregar_profissionais(){
-  const{data}=await db.from('profissionais').select('*').eq('barbearia_id',barbearia_id).order('nome')
+  const{data}=await db.from('profissionais').select('*').eq('barbearia_id',barbearia_id).eq('ativo',true).order('nome')
   const lista=data||[]
   const el=document.getElementById('lista_profissionais')
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty_ico">👥</div><div class="empty_txt">Ainda não tens profissionais</div><div class="empty_txt" style="font-size:12px">Clica no + para adicionar</div></div>';return}
