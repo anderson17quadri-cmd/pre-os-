@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cartaz QR — Agendamento.pt</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:#111; font-family:'Inter',sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; gap:20px; }
@@ -41,15 +42,33 @@ canvas.style.height = H + 'px'
 const ctx = canvas.getContext('2d')
 ctx.scale(SCALE, SCALE)
 
+const SUPA_URL = 'https://ogtyffrokangokeqlufr.supabase.co'
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ndHlmZnJva2FuZ29rZXFsdWZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzE1NjIsImV4cCI6MjA5ODA0NzU2Mn0.fdHAQlS9OM0bEwjpPB0rJOSFPlhhX7gButoxPWy-Fts'
+const { createClient } = supabase
+const db = createClient(SUPA_URL, SUPA_KEY)
+
+let logo_img = null
+
 const qr_img = new Image()
 qr_img.crossOrigin = 'anonymous'
-qr_img.onload = () => {
+qr_img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=' + encodeURIComponent(link_url) + '&bgcolor=ffffff&color=0a0a0a&margin=8'
+
+async function init_cartaz() {
+  if(barb_id) {
+    const { data: barb } = await db.from('barbearias').select('logo_url').eq('id', barb_id).maybeSingle()
+    if(barb && barb.logo_url) {
+      logo_img = new Image()
+      logo_img.crossOrigin = 'anonymous'
+      await new Promise(function(r) { logo_img.onload = r; logo_img.onerror = r; logo_img.src = barb.logo_url })
+    }
+  }
+  await new Promise(function(r) { if(qr_img.complete) r(); else qr_img.onload = r })
   desenhar(qr_img)
   document.getElementById('loading').style.display = 'none'
   canvas.style.display = 'block'
   document.getElementById('btns').style.display = 'flex'
 }
-qr_img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=' + encodeURIComponent(link_url) + '&bgcolor=ffffff&color=0a0a0a&margin=8'
+init_cartaz()
 
 function rr(ctx, x, y, w, h, r) {
   ctx.beginPath()
@@ -164,28 +183,37 @@ function desenhar(qr) {
   ctx.lineWidth = 1
   ctx.beginPath(); ctx.moveTo(30,455); ctx.lineTo(W-30,455); ctx.stroke()
 
-  // === RODAPÉ ===
-  ctx.font = 'italic 700 18px Georgia, serif'
-  ctx.textAlign = 'left'
-  const r1 = 'Agenda'
-  const r2 = 'mento'
-  const r3 = '.pt'
-  const rw1 = ctx.measureText(r1).width
-  const rw2 = ctx.measureText(r2).width
-  const rw3 = ctx.measureText(r3).width
-  const rx = W/2 - (rw1+rw2+rw3)/2
-  ctx.fillStyle = '#C9A84C'
-  ctx.fillText(r1, rx, 490)
-  ctx.fillStyle = 'rgba(255,255,255,0.7)'
-  ctx.fillText(r2, rx+rw1, 490)
-  ctx.fillStyle = '#C9A84C'
-  ctx.fillText(r3, rx+rw1+rw2, 490)
-
-  // Slogan rodapé
-  ctx.font = '400 11px Inter'
-  ctx.fillStyle = 'rgba(201,168,76,0.5)'
-  ctx.textAlign = 'center'
-  ctx.fillText('A ferramenta dos melhores barbeiros.', W/2, 515)
+  // === RODAPÉ — Logo ou marca ===
+  if(logo_img && logo_img.complete && logo_img.naturalWidth > 0) {
+    const logo_h = 50
+    const logo_w = logo_img.naturalWidth * (logo_h / logo_img.naturalHeight)
+    const logo_x = W/2 - logo_w/2
+    ctx.drawImage(logo_img, logo_x, 462, logo_w, logo_h)
+    ctx.font = '400 10px Inter'
+    ctx.fillStyle = 'rgba(201,168,76,0.4)'
+    ctx.textAlign = 'center'
+    ctx.fillText('A ferramenta dos melhores barbeiros.', W/2, 530)
+  } else {
+    ctx.font = 'italic 700 18px Georgia, serif'
+    ctx.textAlign = 'left'
+    const r1 = 'Agenda'
+    const r2 = 'mento'
+    const r3 = '.pt'
+    const rw1 = ctx.measureText(r1).width
+    const rw2 = ctx.measureText(r2).width
+    const rw3 = ctx.measureText(r3).width
+    const rx = W/2 - (rw1+rw2+rw3)/2
+    ctx.fillStyle = '#C9A84C'
+    ctx.fillText(r1, rx, 490)
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'
+    ctx.fillText(r2, rx+rw1, 490)
+    ctx.fillStyle = '#C9A84C'
+    ctx.fillText(r3, rx+rw1+rw2, 490)
+    ctx.font = '400 11px Inter'
+    ctx.fillStyle = 'rgba(201,168,76,0.5)'
+    ctx.textAlign = 'center'
+    ctx.fillText('A ferramenta dos melhores barbeiros.', W/2, 515)
+  }
 }
 
 async function guardar() {
