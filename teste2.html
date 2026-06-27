@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="background:#080808;color:#fff;padding:24px">
+<h1 style="color:#C9A84C">Teste 2</h1>
+<button onclick="document.getElementById('res').textContent='Funciona!'" style="background:#C9A84C;color:#000;padding:14px;border:none;border-radius:8px;font-size:16px">Clica aqui</button>
+<div id="res" style="margin-top:16px;font-size:20px"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+<script>
+try {
+  const { createClient } = supabase
+  const db = createClient('https://ogtyffrokangokeqlufr.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ndHlmZnJva2FuZ29rZXFsdWZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzE1NjIsImV4cCI6MjA5ODA0NzU2Mn0.fdHAQlS9OM0bEwjpPB0rJOSFPlhhX7gButoxPWy-Fts')
+  document.getElementById('res').textContent = 'Supabase carregado!'
+} catch(e) {
+  document.getElementById('res').textContent = 'ERRO: ' + e.message
+}
+</script>
+</body>
+</html>
