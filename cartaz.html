@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cartaz QR — Agendamento.pt</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#111; font-family:'Inter',sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+
+/* CARTAZ */
+#cartaz {
+  width:360px;
+  background:#0a0a0a;
+  border-radius:20px;
+  overflow:hidden;
+  position:relative;
+}
+
+/* Moldura dourada */
+#cartaz::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:20px;
+  padding:3px;
+  background:linear-gradient(135deg, #C9A84C, #E8C96A, #C9A84C, #8B6914, #C9A84C);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events:none;
+}
+
+.cartaz_topo {
+  background:linear-gradient(135deg, #0f0a00, #1a1200);
+  padding:24px 20px 20px;
+  text-align:center;
+  border-bottom:1px solid rgba(201,168,76,.2);
+}
+
+.marca_linha {
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  color:rgba(201,168,76,.6);
+  margin-bottom:6px;
+}
+
+.marca_logo {
+  font-family:'Playfair Display',serif;
+  font-size:26px;
+  font-weight:700;
+  color:#f0f0f0;
+  letter-spacing:.5px;
+}
+
+.marca_logo span { color:#C9A84C; font-style:italic; }
+
+.cartaz_centro {
+  padding:28px 24px;
+  text-align:center;
+  background:#0a0a0a;
+}
+
+.barb_nome {
+  font-family:'Playfair Display',serif;
+  font-size:22px;
+  font-weight:700;
+  color:#f0f0f0;
+  margin-bottom:6px;
+  letter-spacing:-.3px;
+  line-height:1.2;
+}
+
+.barb_tagline {
+  font-size:12px;
+  color:rgba(201,168,76,.7);
+  letter-spacing:2px;
+  text-transform:uppercase;
+  font-weight:600;
+  margin-bottom:24px;
+}
+
+.qr_moldura {
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  display:inline-block;
+  position:relative;
+  box-shadow:0 0 0 1px rgba(201,168,76,.3), 0 8px 32px rgba(0,0,0,.4);
+}
+
+.qr_canto {
+  position:absolute;
+  width:16px;
+  height:16px;
+  border-color:#C9A84C;
+  border-style:solid;
+}
+.qr_canto.tl { top:-4px; left:-4px; border-width:3px 0 0 3px; border-radius:4px 0 0 0; }
+.qr_canto.tr { top:-4px; right:-4px; border-width:3px 3px 0 0; border-radius:0 4px 0 0; }
+.qr_canto.bl { bottom:-4px; left:-4px; border-width:0 0 3px 3px; border-radius:0 0 0 4px; }
+.qr_canto.br { bottom:-4px; right:-4px; border-width:0 3px 3px 0; border-radius:0 0 4px 0; }
+
+.cartaz_rodape {
+  background:linear-gradient(135deg, #0f0a00, #1a1200);
+  padding:18px 20px;
+  text-align:center;
+  border-top:1px solid rgba(201,168,76,.2);
+}
+
+.instrucao {
+  font-size:13px;
+  color:#888;
+  margin-bottom:8px;
+}
+
+.instrucao strong { color:#C9A84C; }
+
+.url_mini {
+  font-size:9px;
+  color:rgba(255,255,255,.2);
+  letter-spacing:.5px;
+  word-break:break-all;
+}
+
+/* BOTÕES */
+.btns { margin-top:20px; display:flex; gap:10px; width:360px; }
+.btn { flex:1; padding:15px; border:none; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; font-family:'Inter',sans-serif; }
+.btn_gold { background:linear-gradient(135deg,#C9A84C,#E8C96A); color:#000; }
+.btn_share { background:#1e1e1e; color:#f0f0f0; border:1px solid #333; }
+</style>
+</head>
+<body>
+
+<div id="cartaz">
+  <div class="cartaz_topo">
+    <div class="marca_linha">powered by</div>
+    <div class="marca_logo">Agenda<span>mento</span>.pt</div>
+  </div>
+
+  <div class="cartaz_centro">
+    <div class="barb_nome" id="nome_barb">A carregar...</div>
+    <div class="barb_tagline">Marca o teu corte online</div>
+    <div class="qr_moldura">
+      <div class="qr_canto tl"></div>
+      <div class="qr_canto tr"></div>
+      <div class="qr_canto bl"></div>
+      <div class="qr_canto br"></div>
+      <canvas id="qr_canvas"></canvas>
+    </div>
+  </div>
+
+  <div class="cartaz_rodape">
+    <div class="instrucao">📱 <strong>Aponta a câmara</strong> e marca em segundos</div>
+    <div class="url_mini" id="url_mini"></div>
+  </div>
+</div>
+
+<div class="btns">
+  <button class="btn btn_gold" onclick="guardar_imagem()">💾 Guardar imagem</button>
+  <button class="btn btn_share" onclick="partilhar()">↗️ Partilhar</button>
+</div>
+
+<script>
+// Receber parâmetros do URL
+const params = new URLSearchParams(window.location.search)
+const barb_id = params.get('b') || ''
+const barb_nome = decodeURIComponent(params.get('n') || 'A minha barbearia')
+const link = 'https://anderson17quadri-cmd.github.io/pre-os-/cliente.html?b=' + barb_id
+
+// Preencher
+document.getElementById('nome_barb').textContent = barb_nome
+document.getElementById('url_mini').textContent = link
+
+// Gerar QR code
+QRCode.toCanvas(document.getElementById('qr_canvas'), link, {
+  width: 200,
+  margin: 1,
+  color: { dark: '#0a0a0a', light: '#ffffff' }
+})
+
+// Guardar como imagem PNG
+async function guardar_imagem() {
+  const btn = document.querySelector('.btn_gold')
+  btn.textContent = '⏳ A gerar...'
+  btn.disabled = true
+
+  try {
+    const canvas = await html2canvas(document.getElementById('cartaz'), {
+      scale: 3,
+      backgroundColor: '#0a0a0a',
+      useCORS: true
+    })
+
+    const link_dl = document.createElement('a')
+    link_dl.download = 'agendamento-' + barb_nome.toLowerCase().replace(/\s+/g,'-') + '.png'
+    link_dl.href = canvas.toDataURL('image/png')
+    link_dl.click()
+  } catch(e) {
+    alert('Erro: ' + e.message)
+  }
+
+  btn.textContent = '💾 Guardar imagem'
+  btn.disabled = false
+}
+
+// Partilhar via Web Share API
+async function partilhar() {
+  const canvas = await html2canvas(document.getElementById('cartaz'), {
+    scale: 3,
+    backgroundColor: '#0a0a0a',
+    useCORS: true
+  })
+
+  canvas.toBlob(async (blob) => {
+    const file = new File([blob], 'agendamento.png', { type: 'image/png' })
+    if(navigator.share && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: 'Agendamento.pt — ' + barb_nome,
+        text: 'Marca o teu corte online!',
+        files: [file]
+      })
+    } else {
+      guardar_imagem()
+    }
+  })
+}
+</script>
+</body>
+</html>
