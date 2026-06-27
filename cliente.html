@@ -702,7 +702,9 @@ async function carregar_horas() {
     const s = h + ':' + min
     let bloqueado = m < min_agora
     if(!bloqueado) for(let i = m; i < m + dur; i++) if(minutos_bloqueados.has(i)) { bloqueado = true; break }
-    return '<div class="hora_chip ' + (bloqueado?'indisponivel':'') + '" id="hora_' + s.replace(':','_') + '" onclick="selecionar_hora(\' + s + \')">' + s + '</div>'
+    const cls = bloqueado ? 'hora_chip indisponivel' : 'hora_chip'
+    const id = 'hora_' + h + '_' + min
+    return `<div class="${cls}" id="${id}" onclick="selecionar_hora('${s}')">${s}</div>`
   }).join('')
 }
 
